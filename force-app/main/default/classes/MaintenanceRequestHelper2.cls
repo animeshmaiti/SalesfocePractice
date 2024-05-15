@@ -1,7 +1,7 @@
+// MaintenanceRequestHelper2.cls is the same as MaintenanceRequestHelper.cls 
 public with sharing class MaintenanceRequestHelper {
     public static void updateworkOrders(List<Case> updWorkOrders, Map<Id,Case> nonUpdCaseMap) {
         Set<Id> validIds = new Set<Id>();
-        
         
         For (Case c : updWorkOrders){
             if (nonUpdCaseMap.get(c.Id).Status != 'Closed' && c.Status == 'Closed'){
@@ -18,13 +18,8 @@ public with sharing class MaintenanceRequestHelper {
                 (SELECT Id,Equipment__c,Quantity__c FROM Equipment_Maintenance_Items__r) 
                 FROM Case WHERE Id IN :validIds
             ]);
-
             Map<Id,Decimal> maintenanceCycles = new Map<ID,Decimal>();
-            AggregateResult[] results = [
-                SELECT Maintenance_Request__c, MIN(Equipment__r.Maintenance_Cycle__c)
-                cycle FROM Equipment_Maintenance_Item__c WHERE Maintenance_Request__c
-                IN :ValidIds GROUP BY Maintenance_Request__c
-            ];
+            AggregateResult[] results = [SELECT Maintenance_Request__c, MIN(Equipment__r.Maintenance_Cycle__c)cycle FROM Equipment_Maintenance_Item__c WHERE Maintenance_Request__c IN :ValidIds GROUP BY Maintenance_Request__c];
         
         for (AggregateResult ar : results){ 
             maintenanceCycles.put((Id) ar.get('Maintenance_Request__c'), (Decimal) ar.get('cycle'));
@@ -45,8 +40,6 @@ public with sharing class MaintenanceRequestHelper {
                 
                 If (maintenanceCycles.containskey(cc.Id)){
                     nc.Date_Due__c = Date.today().addDays((Integer) maintenanceCycles.get(cc.Id));
-                } else {
-                    nc.Date_Due__c = Date.today().addDays((Integer) cc.Equipment__r.maintenance_Cycle__c);
                 }
                 
                 newCases.add(nc);
@@ -65,4 +58,4 @@ public with sharing class MaintenanceRequestHelper {
             insert ClonedWPs;
         }
     }
-} 
+}
